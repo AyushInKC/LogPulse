@@ -10,4 +10,6 @@ import java.util.List;
 public interface LogRepository extends MongoRepository<LogModel,String> {
   List<LogModel> findByLevel(String level);
   List<LogModel>  findByTimestampBetween(Instant start, Instant end);
+
+  long countByLevelAndTimestampAfter(String error, Instant oneMinuteAgo);
 }
