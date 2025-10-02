@@ -3,10 +3,7 @@ import com.FourAM.LogPulse.Model.LogModel;
 import com.FourAM.LogPulse.Service.LogIngestService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.Payload;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/logs")
@@ -29,7 +26,22 @@ public class LogIngestController {
 
     @PostMapping("/ingestAll")
     public ResponseEntity<?> ingestAll(@RequestBody Payload payload){
-       logIngestService.ingestAllLog();
+       logIngestService.ingestAllLog(String.valueOf(payload));
        return ResponseEntity.ok("All the logs are Successfully Ingested and sent to Kafka");
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getLogsById(@PathVariable String id){
+        try {
+            LogModel log = logIngestService.getLogById(id);
+            if (log != null) {
+                return ResponseEntity.ok(log);
+            } else {
+                return ResponseEntity.status(404).body("Log not found with id: " + id);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("Error fetching log: " + e.getMessage());
+        }
     }
 }

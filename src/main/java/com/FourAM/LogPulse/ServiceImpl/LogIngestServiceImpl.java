@@ -25,7 +25,6 @@ public class LogIngestServiceImpl implements LogIngestService {
     @Override
     public void ingestLog(LogModel logModel) {
         try {
-            // Send to Kafka asynchronously using CompletableFuture
             CompletableFuture<SendResult<String, LogModel>> future = kafkaTemplate.send(TOPIC, logModel);
 
             future.whenComplete((result, ex) -> {
@@ -36,9 +35,7 @@ public class LogIngestServiceImpl implements LogIngestService {
                 }
             });
 
-            // Save to MongoDB
             logRepository.save(logModel);
-
         } catch (Exception e) {
             e.printStackTrace();
             throw new RuntimeException("Failed to publish log to Kafka", e);
@@ -57,18 +54,21 @@ public class LogIngestServiceImpl implements LogIngestService {
         LogModel logModel;
 
         try {
-            // Try parsing as JSON (structured)
+
             logModel = objectMapper.readValue(payload, LogModel.class);
         } catch (Exception e) {
-            // If fails, treat as unstructured
+
             logModel = LogParser.parse(payload);
         }
 
         sendToKafkaAndSave(logModel);
     }
 
+    @Override
+    public LogModel getLogById(String id) {
+        return logRepository.findById(id).orElse(null);
+    }
 
-    // Internal helper to send to Kafka and save to MongoDB
     private void sendToKafkaAndSave(LogModel logModel) {
         try {
             kafkaTemplate.send(TOPIC, logModel);
